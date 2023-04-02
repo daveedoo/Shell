@@ -127,15 +127,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ShapeBuilder.cpp" />
-    <ClCompile Include="GlfwOcctView.cpp" />
-    <ClCompile Include="GlfwOcctWindow.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\ShapeBuilder.cpp" />
+    <ClCompile Include="src\GlfwOcctView.cpp" />
+    <ClCompile Include="src\GlfwOcctWindow.cpp" />
+    <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ShapeBuilder.h" />
-    <ClInclude Include="GlfwOcctView.h" />
-    <ClInclude Include="GlfwOcctWindow.h" />
+    <ClInclude Include="src\ShapeBuilder.h" />
+    <ClInclude Include="src\GlfwOcctView.h" />
+    <ClInclude Include="src\GlfwOcctWindow.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

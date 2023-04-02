@@ -15,27 +15,27 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GlfwOcctWindow.cpp">
+    <ClCompile Include="src\GlfwOcctWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GlfwOcctView.cpp">
+    <ClCompile Include="src\GlfwOcctView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ShapeBuilder.cpp">
+    <ClCompile Include="src\ShapeBuilder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GlfwOcctWindow.h">
+    <ClInclude Include="src\GlfwOcctWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GlfwOcctView.h">
+    <ClInclude Include="src\GlfwOcctView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ShapeBuilder.h">
+    <ClInclude Include="src\ShapeBuilder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
