@@ -4,8 +4,9 @@
 
 int main()
 {
-    auto bottle = ShapeBuilder::Bottle(50.0, 70.0, 20.0);
+    //auto shape = ShapeBuilder::Bottle(50.0, 70.0, 20.0);
+    auto shape = ShapeBuilder::Shell(false);
     
-    GlfwOcctView anApp(bottle);
+    GlfwOcctView anApp(shape);
     anApp.run();
 }

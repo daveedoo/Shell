@@ -22,6 +22,10 @@
 #include <opencascade/GCE2d_MakeSegment.hxx>
 #include <opencascade/BRepLib.hxx>
 #include <opencascade/BRepOffsetAPI_ThruSections.hxx>
+#include <opencascade/BRepAlgoAPI_Cut.hxx>
+#include <opencascade/ChFi3d_FilletShape.hxx>
+#include <opencascade/TopoDS.hxx>
+#include <opencascade/TopExp_Explorer.hxx>
 
 TopoDS_Shape ShapeBuilder::Bottle(const Standard_Real myWidth, const Standard_Real myHeight, const Standard_Real myThickness)
 {
@@ -157,4 +161,147 @@ TopoDS_Shape ShapeBuilder::Bottle(const Standard_Real myWidth, const Standard_Re
     aBuilder.Add(aRes, myThreading);
 
     return aRes;
+}
+
+const TopoDS_Shape& cut(TopoDS_Shape shape, TopoDS_Shape knife, int translation[3] /*= [0, 0, 0]*/)
+{
+    gp_Trsf tf;
+    tf.SetTranslation(gp_Vec(translation[0], translation[1], translation[2]));
+
+    TopLoc_Location loc(tf);
+
+    BRepAlgoAPI_Cut c(shape, knife.Moved(loc, false), Message_ProgressRange());
+    c.Build(Message_ProgressRange());
+
+    return c.Shape();
+}
+
+TopoDS_Shape ShapeBuilder::Shell(bool doFillet, bool showRawShape)
+{
+    // geometry
+    gp_Pnt g_p1(0, 0, 0);
+    gp_Pnt g_p2(5, 0, 0);
+    gp_Pnt g_p3(5, 5, 0);
+    gp_Pnt g_p4(0, 5, 0);
+    gp_Pnt g_circleControl(2.5, 6, 0);
+
+    GC_MakeSegment g_edge1(g_p1, g_p2);
+    GC_MakeSegment g_edge2(g_p2, g_p3);
+    GC_MakeArcOfCircle g_edge3(g_p3, g_circleControl, g_p4);
+    GC_MakeSegment g_edge4(g_p4, g_p1);
+
+
+    // topology
+    BRepBuilderAPI_MakeEdge topo_e1(Handle_Geom_Curve(g_edge1.Value().get()));
+    BRepBuilderAPI_MakeEdge topo_e2(Handle_Geom_Curve(g_edge2.Value().get()));
+    BRepBuilderAPI_MakeEdge topo_e3(Handle_Geom_Curve(g_edge3.Value().get()));
+    BRepBuilderAPI_MakeEdge topo_e4(Handle_Geom_Curve(g_edge4.Value().get()));
+
+    BRepBuilderAPI_MakeWire topo_wire(topo_e1.Edge(), topo_e2.Edge(), topo_e3.Edge(), topo_e4.Edge());
+    BRepBuilderAPI_MakeFace topo_face(topo_wire.Wire(), false);
+
+    gp_Vec vec(0, 0, 7);
+    BRepPrimAPI_MakePrism topo_prism(topo_face.Shape(), vec, false, true);
+
+    // cut a cylinder inside of this shape
+    BRepPrimAPI_MakeCylinder cylinder(1, 10);
+    int translation[3] = { 2.5, 2.5, 0 };
+    auto rawShape = cut(topo_prism.Shape(), cylinder.Shape(), translation);
+
+    // fillet edges
+    // "fillet" = rounded edges
+    TopoDS_Shape shape;
+
+    // convenience definitions
+    ChFi3d_FilletShape filletShape = ChFi3d_Rational;
+    TopAbs_ShapeEnum shapeEnumEdge = TopAbs_EDGE;
+    TopAbs_ShapeEnum shapeEnumShape = TopAbs_SHAPE;
+    TopAbs_ShapeEnum shapeEnumFace = TopAbs_FACE;
+
+
+    if (doFillet)
+    {
+        BRepFilletAPI_MakeFillet fillet(rawShape, filletShape);
+        TopExp_Explorer edgeExplorer(rawShape, shapeEnumEdge, shapeEnumShape);
+
+        while (edgeExplorer.More())
+        {
+            auto edge = TopoDS::Edge(edgeExplorer.Current());
+            fillet.Add(0.2, edge);
+
+            edgeExplorer.Next();
+        }
+
+        shape = fillet.Shape();
+    }
+    else {
+        shape = rawShape;
+    }
+
+    if (showRawShape) {
+        return shape;
+    }
+
+    TopExp_Explorer faceExplorer(shape, shapeEnumFace, shapeEnumShape);
+
+    int maxZ = -100000;
+    TopoDS_Shape faceToRemove;  // TODO: check
+    for (; faceExplorer.More(); faceExplorer.Next()) {
+        auto face = TopoDS::Face(faceExplorer.Current());
+
+        // get face surface and check if it is a plane
+        auto surface = BRep_Tool::Surface(face);
+
+        // this is a crude check if this is a plane
+        // probably can be done better?
+        if (surface.get()->DynamicType().get()->Name() == "Geom_Plane") {
+            auto plane = Handle_Geom_Plane((Geom_Plane*)(surface.get())).get();  // TODO: casting?
+            auto point = plane->Location();
+            auto z = point.Z();
+
+            std::cout << "plane found at z = " << z << std::endl;
+
+            if (z > maxZ) {
+                maxZ = z;
+                faceToRemove = faceExplorer.Current();
+            }
+        }
+    }
+
+    // remove face and make hollow solid
+    TopTools_ListOfShape facesToRemove;
+    facesToRemove.Append(faceToRemove);
+
+    BRepOffsetAPI_MakeThickSolid hollowSolid;
+    Standard_Real thickness = -0.5;
+    Standard_Real tolerance = 1.e-3;
+
+    std::cout << "building thick solid..." << std::endl;
+
+    try
+    {
+        hollowSolid.MakeThickSolidByJoin(shape, facesToRemove, thickness, tolerance,
+            BRepOffset_Mode::BRepOffset_Skin, false, false,
+            GeomAbs_JoinType::GeomAbs_Arc, false,
+            Message_ProgressRange());
+    }
+    catch (std::exception e)
+    {
+        std::cout << e.what() << std::endl;
+    }
+
+    std::cout << "solid done! building shape..." << std::endl;
+
+    TopoDS_Shape result;
+
+    try
+    {
+        result = hollowSolid.Shape();
+    }
+    catch (std::exception e)
+    {
+        std::cout << e.what() << std::endl;
+    }
+
+    return result; 
 }
