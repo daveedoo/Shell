@@ -78,7 +78,7 @@ namespace
 // Function : GlfwOcctView
 // Purpose  :
 // ================================================================
-GlfwOcctView::GlfwOcctView()
+GlfwOcctView::GlfwOcctView(const TopoDS_Shape& shape) : shape(shape)
 {
 }
 
@@ -197,9 +197,9 @@ void GlfwOcctView::initDemoScene()
 
     gp_Ax2 anAxis;
     anAxis.SetLocation(gp_Pnt(0.0, 0.0, 0.0));
-    auto bottle = ShapeBuilder::Bottle(50.0, 100.0, 10.0);
-    Handle(AIS_Shape) ais_bottle = new AIS_Shape(bottle);
-    myContext->Display(ais_bottle, AIS_Shaded, 0, false);
+    //auto bottle = ShapeBuilder::Bottle(50.0, 100.0, 10.0);
+    Handle(AIS_Shape) ais_shape = new AIS_Shape(shape);
+    myContext->Display(ais_shape, AIS_Shaded, 0, false);
 
     //Handle(AIS_Shape) aBox = new AIS_Shape(BRepPrimAPI_MakeBox(anAxis, 50, 50, 50).Shape());
     //myContext->Display(aBox, AIS_Shaded, 0, false);

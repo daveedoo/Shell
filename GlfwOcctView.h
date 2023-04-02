@@ -31,9 +31,12 @@
 //! Sample class creating 3D Viewer within GLFW window.
 class GlfwOcctView : protected AIS_ViewController
 {
+private:
+	const TopoDS_Shape& shape;
+
 public:
 	//! Default constructor.
-	GlfwOcctView();
+	GlfwOcctView(const TopoDS_Shape& shape);
 
 	//! Destructor.
 	~GlfwOcctView();

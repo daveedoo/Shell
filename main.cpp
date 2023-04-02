@@ -1,10 +1,11 @@
 #include "GlfwOcctView.h"
+#include "ShapeBuilder.h"
 
 
 int main()
 {
-    //auto bottle = ShapeBuilder::Bottle(2.0, 2.0, 2.0);
+    auto bottle = ShapeBuilder::Bottle(50.0, 70.0, 20.0);
     
-    GlfwOcctView anApp;
+    GlfwOcctView anApp(bottle);
     anApp.run();
 }
