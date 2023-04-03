@@ -163,15 +163,15 @@ TopoDS_Shape ShapeBuilder::Bottle(const Standard_Real myWidth, const Standard_Re
     return aRes;
 }
 
-const TopoDS_Shape& cut(TopoDS_Shape shape, TopoDS_Shape knife, int translation[3] /*= [0, 0, 0]*/)
+TopoDS_Shape cut(TopoDS_Shape shape, TopoDS_Shape knife, Standard_Real tx, Standard_Real ty, Standard_Real tz)
 {
     gp_Trsf tf;
-    tf.SetTranslation(gp_Vec(translation[0], translation[1], translation[2]));
+    tf.SetTranslation(gp_Vec(tx, ty, tz));
 
     TopLoc_Location loc(tf);
 
-    BRepAlgoAPI_Cut c(shape, knife.Moved(loc, false), Message_ProgressRange());
-    c.Build(Message_ProgressRange());
+    BRepAlgoAPI_Cut c(shape, knife.Moved(loc, false));
+    c.Build();
 
     return c.Shape();
 }
@@ -179,55 +179,46 @@ const TopoDS_Shape& cut(TopoDS_Shape shape, TopoDS_Shape knife, int translation[
 TopoDS_Shape ShapeBuilder::Shell(bool doFillet, bool showRawShape)
 {
     // geometry
-    gp_Pnt g_p1(0, 0, 0);
-    gp_Pnt g_p2(5, 0, 0);
-    gp_Pnt g_p3(5, 5, 0);
-    gp_Pnt g_p4(0, 5, 0);
-    gp_Pnt g_circleControl(2.5, 6, 0);
+    gp_Pnt g_p1(0.0f, 0.0f, 0.0f);
+    gp_Pnt g_p2(5.0f, 0.0f, 0.0f);
+    gp_Pnt g_p3(5.0f, 5.0f, 0.0f);
+    gp_Pnt g_p4(0.0f, 5.0f, 0.0f);
+    gp_Pnt g_circleControl(2.5f, 6.0f, 0.0f);
 
-    GC_MakeSegment g_edge1(g_p1, g_p2);
-    GC_MakeSegment g_edge2(g_p2, g_p3);
-    GC_MakeArcOfCircle g_edge3(g_p3, g_circleControl, g_p4);
-    GC_MakeSegment g_edge4(g_p4, g_p1);
-
+    Handle(Geom_TrimmedCurve) g_edge1 = GC_MakeSegment(g_p1, g_p2);
+    Handle(Geom_TrimmedCurve) g_edge2 = GC_MakeSegment(g_p2, g_p3);
+    Handle(Geom_TrimmedCurve) g_edge3 = GC_MakeArcOfCircle(g_p3, g_circleControl, g_p4);
+    Handle(Geom_TrimmedCurve) g_edge4 = GC_MakeSegment(g_p4, g_p1);
 
     // topology
-    BRepBuilderAPI_MakeEdge topo_e1(Handle_Geom_Curve(g_edge1.Value().get()));
-    BRepBuilderAPI_MakeEdge topo_e2(Handle_Geom_Curve(g_edge2.Value().get()));
-    BRepBuilderAPI_MakeEdge topo_e3(Handle_Geom_Curve(g_edge3.Value().get()));
-    BRepBuilderAPI_MakeEdge topo_e4(Handle_Geom_Curve(g_edge4.Value().get()));
+    TopoDS_Edge topo_e1 = BRepBuilderAPI_MakeEdge(g_edge1);
+    TopoDS_Edge topo_e2 = BRepBuilderAPI_MakeEdge(g_edge2);
+    TopoDS_Edge topo_e3 = BRepBuilderAPI_MakeEdge(g_edge3);
+    TopoDS_Edge topo_e4 = BRepBuilderAPI_MakeEdge(g_edge4);
 
-    BRepBuilderAPI_MakeWire topo_wire(topo_e1.Edge(), topo_e2.Edge(), topo_e3.Edge(), topo_e4.Edge());
-    BRepBuilderAPI_MakeFace topo_face(topo_wire.Wire(), false);
+    TopoDS_Wire topo_wire = BRepBuilderAPI_MakeWire(topo_e1, topo_e2, topo_e3, topo_e4);
+    TopoDS_Face topo_face = BRepBuilderAPI_MakeFace(topo_wire, false);
 
-    gp_Vec vec(0, 0, 7);
-    BRepPrimAPI_MakePrism topo_prism(topo_face.Shape(), vec, false, true);
+    gp_Vec vec(0.0f, 0.0f, 7.0f);
+    TopoDS_Shape topo_prism = BRepPrimAPI_MakePrism(topo_face, vec, false, true);
 
     // cut a cylinder inside of this shape
-    BRepPrimAPI_MakeCylinder cylinder(1, 10);
-    int translation[3] = { 2.5, 2.5, 0 };
-    auto rawShape = cut(topo_prism.Shape(), cylinder.Shape(), translation);
+    TopoDS_Shape cylinder = BRepPrimAPI_MakeCylinder(1.0f, 10.0f);
+    auto rawShape = cut(topo_prism, cylinder, 2.5f, 2.5f, 0.0f);
 
     // fillet edges
     // "fillet" = rounded edges
     TopoDS_Shape shape;
 
-    // convenience definitions
-    ChFi3d_FilletShape filletShape = ChFi3d_Rational;
-    TopAbs_ShapeEnum shapeEnumEdge = TopAbs_EDGE;
-    TopAbs_ShapeEnum shapeEnumShape = TopAbs_SHAPE;
-    TopAbs_ShapeEnum shapeEnumFace = TopAbs_FACE;
-
-
     if (doFillet)
     {
-        BRepFilletAPI_MakeFillet fillet(rawShape, filletShape);
-        TopExp_Explorer edgeExplorer(rawShape, shapeEnumEdge, shapeEnumShape);
+        BRepFilletAPI_MakeFillet fillet(rawShape, ChFi3d_FilletShape::ChFi3d_Rational);
+        TopExp_Explorer edgeExplorer(rawShape, TopAbs_ShapeEnum::TopAbs_EDGE, TopAbs_ShapeEnum::TopAbs_SHAPE);
 
         while (edgeExplorer.More())
         {
             auto edge = TopoDS::Edge(edgeExplorer.Current());
-            fillet.Add(0.2, edge);
+            fillet.Add(0.2f, edge);
 
             edgeExplorer.Next();
         }
@@ -242,22 +233,22 @@ TopoDS_Shape ShapeBuilder::Shell(bool doFillet, bool showRawShape)
         return shape;
     }
 
-    TopExp_Explorer faceExplorer(shape, shapeEnumFace, shapeEnumShape);
+    TopExp_Explorer faceExplorer(shape, TopAbs_ShapeEnum::TopAbs_FACE, TopAbs_ShapeEnum::TopAbs_SHAPE);
 
-    int maxZ = -100000;
+    Standard_Real maxZ = -100000;
     TopoDS_Shape faceToRemove;  // TODO: check
     for (; faceExplorer.More(); faceExplorer.Next()) {
-        auto face = TopoDS::Face(faceExplorer.Current());
+        TopoDS_Face face = TopoDS::Face(faceExplorer.Current());
 
         // get face surface and check if it is a plane
-        auto surface = BRep_Tool::Surface(face);
+        Handle(Geom_Surface) surface = BRep_Tool::Surface(face);
 
         // this is a crude check if this is a plane
         // probably can be done better?
-        if (surface.get()->DynamicType().get()->Name() == "Geom_Plane") {
-            auto plane = Handle_Geom_Plane((Geom_Plane*)(surface.get())).get();  // TODO: casting?
-            auto point = plane->Location();
-            auto z = point.Z();
+        if (surface->DynamicType() == STANDARD_TYPE(Geom_Plane)) {
+            Handle(Geom_Plane) plane = Handle(Geom_Plane)::DownCast(surface);
+            gp_Pnt location = plane->Location();
+            Standard_Real z = location.Z();
 
             std::cout << "plane found at z = " << z << std::endl;
 
@@ -285,7 +276,7 @@ TopoDS_Shape ShapeBuilder::Shell(bool doFillet, bool showRawShape)
             GeomAbs_JoinType::GeomAbs_Arc, false,
             Message_ProgressRange());
     }
-    catch (std::exception e)
+    catch (const std::exception & e)
     {
         std::cout << e.what() << std::endl;
     }
