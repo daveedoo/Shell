@@ -61,6 +61,8 @@ private:
 	//! Clean up before .
 	void cleanup();
 
+	void initGui();
+
 	//! @name GLWF callbacks
 private:
 	//! Window resize event.

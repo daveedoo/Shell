@@ -35,6 +35,9 @@
 
 #include <GLFW/glfw3.h>
 #include "ShapeBuilder.h"
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 namespace
 {
@@ -124,6 +127,7 @@ void GlfwOcctView::run()
 
     myView->MustBeResized();
     myOcctWindow->Map();
+    initGui();
     mainloop();
     cleanup();
 }
@@ -170,6 +174,7 @@ void GlfwOcctView::initViewer()
     }
 
     Handle(OpenGl_GraphicDriver) aGraphicDriver = new OpenGl_GraphicDriver(myOcctWindow->GetDisplay(), false);
+    aGraphicDriver->SetBuffersNoSwap(true);
     Handle(V3d_Viewer) aViewer = new V3d_Viewer(aGraphicDriver);
     aViewer->SetDefaultLights();
     aViewer->SetLightOn();
@@ -230,11 +235,24 @@ void GlfwOcctView::mainloop()
     {
         // glfwPollEvents() for continuous rendering (immediate return if there are no new events)
         // and glfwWaitEvents() for rendering on demand (something actually happened in the viewer)
-        //glfwPollEvents();
-        glfwWaitEvents();
+        glfwPollEvents();
+        //glfwWaitEvents();
         if (!myView.IsNull())
         {
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            ImGui::Begin("Test okno");
+            ImGui::Button("baton");
+            ImGui::End();
+
             FlushViewEvents(myContext, myView, true);
+            myView->Redraw();
+
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            glfwSwapBuffers(myOcctWindow->getGlfwWindow());
         }
     }
 }
@@ -254,6 +272,19 @@ void GlfwOcctView::cleanup()
         myOcctWindow->Close();
     }
     glfwTerminate();
+}
+
+void GlfwOcctView::initGui()
+{
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    auto& io = ImGui::GetIO();
+
+    io.IniFilename = nullptr;
+    ImGui_ImplGlfw_InitForOpenGL(myOcctWindow->getGlfwWindow(), true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
+    ImGui::StyleColorsDark();
 }
 
 // ================================================================
@@ -291,6 +322,8 @@ void GlfwOcctView::onMouseScroll(double theOffsetX, double theOffsetY)
 // ================================================================
 void GlfwOcctView::onMouseButton(int theButton, int theAction, int theMods)
 {
+    if (ImGui::GetIO().WantCaptureMouse)
+        return;
     if (myView.IsNull()) { return; }
 
     const Graphic3d_Vec2i aPos = myOcctWindow->CursorPosition();
