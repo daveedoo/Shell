@@ -228,7 +228,8 @@ TopoDS_Shape ShapeBuilder::TheShape(bool doFillet, bool showRawShape)
     return rawShape;
 }
 
-TopoDS_Shape ShapeBuilder::Shell(const TopoDS_Shape& originalShape, Standard_Real thickness)
+TopoDS_Shape ShapeBuilder::Shell(const TopoDS_Shape& originalShape, Standard_Real thickness, Standard_Real tolerance,
+    BRepOffset_Mode offsetMode, GeomAbs_JoinType joinType, Standard_Boolean removeIntEdges)
 {
     TopExp_Explorer faceExplorer(originalShape, TopAbs_ShapeEnum::TopAbs_FACE, TopAbs_ShapeEnum::TopAbs_SHAPE);
 
@@ -263,7 +264,6 @@ TopoDS_Shape ShapeBuilder::Shell(const TopoDS_Shape& originalShape, Standard_Rea
     facesToRemove.Append(faceToRemove);
 
     BRepOffsetAPI_MakeThickSolid hollowSolid;
-    Standard_Real tolerance = 1.e-3;
 
 #ifdef DO_LOGS
     std::cout << "building thick solid..." << std::endl;
@@ -272,8 +272,8 @@ TopoDS_Shape ShapeBuilder::Shell(const TopoDS_Shape& originalShape, Standard_Rea
     try
     {
         hollowSolid.MakeThickSolidByJoin(originalShape, facesToRemove, thickness, tolerance,
-            BRepOffset_Mode::BRepOffset_Skin, false, false,
-            GeomAbs_JoinType::GeomAbs_Arc, false,
+            offsetMode, false, false,
+            joinType, removeIntEdges,
             Message_ProgressRange());
     }
     catch (const std::exception& e)
