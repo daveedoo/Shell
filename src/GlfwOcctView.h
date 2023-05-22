@@ -24,19 +24,26 @@
 
 #include "GlfwOcctWindow.h"
 
+#include <opencascade/AIS_Shape.hxx>
 #include <opencascade/AIS_InteractiveContext.hxx>
 #include <opencascade/AIS_ViewController.hxx>
 #include <opencascade/V3d_View.hxx>
+#include "ShapeProviders/ShapeProvider.h"
+#include "GuiWindow.h"
 
 //! Sample class creating 3D Viewer within GLFW window.
 class GlfwOcctView : protected AIS_ViewController
 {
 private:
-	const TopoDS_Shape& shape;
+	Handle(AIS_Shape) ais_shape;
+	std::shared_ptr<const ShapeProvider> shapeProvider;
+	std::unique_ptr<GuiWindow> gui;
+
+	void UpdateShape();
 
 public:
 	//! Default constructor.
-	GlfwOcctView(const TopoDS_Shape& shape);
+	GlfwOcctView(std::shared_ptr<const ShapeProvider> shapeProvider, std::unique_ptr<GuiWindow> gui);
 
 	//! Destructor.
 	~GlfwOcctView();
@@ -62,6 +69,8 @@ private:
 	void cleanup();
 
 	void initGui();
+
+	void drawGui();
 
 	//! @name GLWF callbacks
 private:

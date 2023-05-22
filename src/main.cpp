@@ -1,12 +1,14 @@
 #include "GlfwOcctView.h"
 #include "ShapeBuilder.h"
+#include "GuiWindow.h"
 
 
 int main()
 {
-    //auto shape = ShapeBuilder::Bottle(50.0, 70.0, 20.0);
-    auto shape = ShapeBuilder::Shell(false);
-    
-    GlfwOcctView anApp(shape);
+    auto originalShape = ShapeBuilder::TheShape(false);
+    auto shellProvider = std::make_shared<ShellProvider>(originalShape);
+    auto gui = std::make_unique<GuiWindow>(shellProvider);
+    GlfwOcctView anApp(std::move(shellProvider), std::move(gui));
+
     anApp.run();
 }
