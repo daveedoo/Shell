@@ -117,7 +117,7 @@ void GlfwOcctView::errorCallback(int theError, const char* theDescription)
 // ================================================================
 void GlfwOcctView::run()
 {
-    initWindow(800, 600, "glfw occt");
+    initWindow(800, 600, "occt shell");
     initViewer();
     initDemoScene();
     if (myView.IsNull())
@@ -271,6 +271,11 @@ void GlfwOcctView::cleanup()
     {
         myOcctWindow->Close();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     glfwTerminate();
 }
 
