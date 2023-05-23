@@ -3,7 +3,10 @@
 
 void ShellProvider::UpdateShell()
 {
-	this->shell = ShapeBuilder::Shell(originalShape, this->thickness, this->tolerance,
+	this->shell = ShapeBuilder::Shell(originalShape, 
+		this->faceSelectMethod,
+		this->thickness, 
+		this->tolerance,
 		this->offsetMode,
 		this->joinType,
 		this->removeIntEdges);
@@ -13,6 +16,11 @@ ShellProvider::ShellProvider(const TopoDS_Shape& originalShape)
 	: originalShape(originalShape)
 {
 	UpdateShell();
+}
+
+void ShellProvider::SetSelectionMethod (ShapeBuilder::ShellFaceSelectionMethod method) {
+	this->faceSelectMethod = method;
+	UpdateShell ();
 }
 
 void ShellProvider::SetThickness(Standard_Real thickness)

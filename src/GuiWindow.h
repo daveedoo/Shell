@@ -4,12 +4,21 @@
 
 class GuiWindow
 {
+private:
 	std::shared_ptr<ShellProvider> shellProvider;
+	bool shapeChanged;
 
 public:
 	GuiWindow(std::shared_ptr<ShellProvider> shellProvider)
-		: shellProvider(shellProvider) {}
+		: shellProvider(shellProvider), shapeChanged(false) {}
 
 	/// Returns true, if any control changed.
-	bool DrawWindow() const;
+	void DrawWindow();
+
+public:
+	bool PopShapeChange ();
+
+private:
+	void m_DrawShellOptions ();
+	void m_DrawTopologyOptions ();
 };
