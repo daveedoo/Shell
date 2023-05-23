@@ -26,6 +26,7 @@
 #include <opencascade/ChFi3d_FilletShape.hxx>
 #include <opencascade/TopoDS.hxx>
 #include <opencascade/TopExp_Explorer.hxx>
+#include <opencascade/StdFail_NotDone.hxx>
 
 //#define DO_LOGS
 
@@ -291,9 +292,14 @@ TopoDS_Shape ShapeBuilder::Shell(const TopoDS_Shape& originalShape, Standard_Rea
     {
         result = hollowSolid.Shape();
     }
-    catch (std::exception e)
+    catch (const std::exception& e)
     {
         std::cout << e.what() << std::endl;
+    }
+    catch (StdFail_NotDone notDone)
+    {
+        notDone.Print(std::cout);
+        std::cout << std::endl;
     }
 
     return result;

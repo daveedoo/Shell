@@ -12,7 +12,7 @@ bool GuiWindow::DrawWindow() const
     static float thickness = this->shellProvider->GetThickness();
     static float tolerance = this->shellProvider->GetTolerance();
 
-    if (ImGui::DragFloat("Thickness", &thickness, 0.01f, -1.f))
+    if (ImGui::DragFloat("Thickness", &thickness, 0.01f))
     {
         changed = true;
         this->shellProvider->SetThickness(thickness);
