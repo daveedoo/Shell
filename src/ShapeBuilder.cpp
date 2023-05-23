@@ -27,6 +27,8 @@
 #include <opencascade/TopoDS.hxx>
 #include <opencascade/TopExp_Explorer.hxx>
 
+//#define DO_LOGS
+
 TopoDS_Shape ShapeBuilder::Bottle(const Standard_Real myWidth, const Standard_Real myHeight, const Standard_Real myThickness)
 {
     // Profile : Define Support Points
@@ -163,20 +165,20 @@ TopoDS_Shape ShapeBuilder::Bottle(const Standard_Real myWidth, const Standard_Re
     return aRes;
 }
 
-TopoDS_Shape cut(TopoDS_Shape shape, TopoDS_Shape knife, Standard_Real tx, Standard_Real ty, Standard_Real tz)
+TopoDS_Shape cut(TopoDS_Shape originalShape, TopoDS_Shape knife, Standard_Real tx, Standard_Real ty, Standard_Real tz)
 {
     gp_Trsf tf;
     tf.SetTranslation(gp_Vec(tx, ty, tz));
 
     TopLoc_Location loc(tf);
 
-    BRepAlgoAPI_Cut c(shape, knife.Moved(loc, false));
+    BRepAlgoAPI_Cut c(originalShape, knife.Moved(loc, false));
     c.Build();
 
     return c.Shape();
 }
 
-TopoDS_Shape ShapeBuilder::Shell(bool doFillet, bool showRawShape)
+TopoDS_Shape ShapeBuilder::TheShape(bool doFillet, bool showRawShape)
 {
     // geometry
     gp_Pnt g_p1(0.0f, 0.0f, 0.0f);
@@ -208,8 +210,6 @@ TopoDS_Shape ShapeBuilder::Shell(bool doFillet, bool showRawShape)
 
     // fillet edges
     // "fillet" = rounded edges
-    TopoDS_Shape shape;
-
     if (doFillet)
     {
         BRepFilletAPI_MakeFillet fillet(rawShape, ChFi3d_FilletShape::ChFi3d_Rational);
@@ -223,17 +223,15 @@ TopoDS_Shape ShapeBuilder::Shell(bool doFillet, bool showRawShape)
             edgeExplorer.Next();
         }
 
-        shape = fillet.Shape();
+        return fillet.Shape();
     }
-    else {
-        shape = rawShape;
-    }
+    return rawShape;
+}
 
-    if (showRawShape) {
-        return shape;
-    }
-
-    TopExp_Explorer faceExplorer(shape, TopAbs_ShapeEnum::TopAbs_FACE, TopAbs_ShapeEnum::TopAbs_SHAPE);
+TopoDS_Shape ShapeBuilder::Shell(const TopoDS_Shape& originalShape, Standard_Real thickness, Standard_Real tolerance,
+    BRepOffset_Mode offsetMode, GeomAbs_JoinType joinType, Standard_Boolean removeIntEdges)
+{
+    TopExp_Explorer faceExplorer(originalShape, TopAbs_ShapeEnum::TopAbs_FACE, TopAbs_ShapeEnum::TopAbs_SHAPE);
 
     Standard_Real maxZ = -100000;
     TopoDS_Shape faceToRemove;  // TODO: check
@@ -250,7 +248,9 @@ TopoDS_Shape ShapeBuilder::Shell(bool doFillet, bool showRawShape)
             gp_Pnt location = plane->Location();
             Standard_Real z = location.Z();
 
+#ifdef DO_LOGS
             std::cout << "plane found at z = " << z << std::endl;
+#endif // DO_LOGS
 
             if (z > maxZ) {
                 maxZ = z;
@@ -264,24 +264,26 @@ TopoDS_Shape ShapeBuilder::Shell(bool doFillet, bool showRawShape)
     facesToRemove.Append(faceToRemove);
 
     BRepOffsetAPI_MakeThickSolid hollowSolid;
-    Standard_Real thickness = -0.5;
-    Standard_Real tolerance = 1.e-3;
 
+#ifdef DO_LOGS
     std::cout << "building thick solid..." << std::endl;
+#endif // DO_LOGS
 
     try
     {
-        hollowSolid.MakeThickSolidByJoin(shape, facesToRemove, thickness, tolerance,
-            BRepOffset_Mode::BRepOffset_Skin, false, false,
-            GeomAbs_JoinType::GeomAbs_Arc, false,
+        hollowSolid.MakeThickSolidByJoin(originalShape, facesToRemove, thickness, tolerance,
+            offsetMode, false, false,
+            joinType, removeIntEdges,
             Message_ProgressRange());
     }
-    catch (const std::exception & e)
+    catch (const std::exception& e)
     {
         std::cout << e.what() << std::endl;
     }
 
+#ifdef DO_LOGS
     std::cout << "solid done! building shape..." << std::endl;
+#endif // DO_LOGS
 
     TopoDS_Shape result;
 
@@ -294,5 +296,5 @@ TopoDS_Shape ShapeBuilder::Shell(bool doFillet, bool showRawShape)
         std::cout << e.what() << std::endl;
     }
 
-    return result; 
+    return result;
 }

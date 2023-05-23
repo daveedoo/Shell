@@ -38,6 +38,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include "GuiWindow.h"
 
 namespace
 {
@@ -77,11 +78,24 @@ namespace
     }
 }
 
+void GlfwOcctView::UpdateShape()
+{
+    if (!ais_shape.IsNull())
+        myContext->Remove(ais_shape, false);
+
+    auto& originalShape = shapeProvider->GetShape();
+    ais_shape = new AIS_Shape(originalShape);
+    if (!myContext.IsNull())
+        myContext->Display(ais_shape, AIS_Shaded, 0, false);
+}
+
 // ================================================================
 // Function : GlfwOcctView
 // Purpose  :
 // ================================================================
-GlfwOcctView::GlfwOcctView(const TopoDS_Shape& shape) : shape(shape)
+GlfwOcctView::GlfwOcctView(std::shared_ptr<const ShapeProvider> shapeProvider, std::unique_ptr<GuiWindow> gui)
+    : shapeProvider(shapeProvider),
+    gui(std::move(gui))
 {
 }
 
@@ -117,7 +131,7 @@ void GlfwOcctView::errorCallback(int theError, const char* theDescription)
 // ================================================================
 void GlfwOcctView::run()
 {
-    initWindow(800, 600, "glfw occt");
+    initWindow(800, 600, "occt shell");
     initViewer();
     initDemoScene();
     if (myView.IsNull())
@@ -202,15 +216,7 @@ void GlfwOcctView::initDemoScene()
 
     gp_Ax2 anAxis;
     anAxis.SetLocation(gp_Pnt(0.0, 0.0, 0.0));
-    //auto bottle = ShapeBuilder::Bottle(50.0, 100.0, 10.0);
-    Handle(AIS_Shape) ais_shape = new AIS_Shape(shape);
-    myContext->Display(ais_shape, AIS_Shaded, 0, false);
-
-    //Handle(AIS_Shape) aBox = new AIS_Shape(BRepPrimAPI_MakeBox(anAxis, 50, 50, 50).Shape());
-    //myContext->Display(aBox, AIS_Shaded, 0, false);
-    //anAxis.SetLocation(gp_Pnt(25.0, 125.0, 0.0));
-    //Handle(AIS_Shape) aCone = new AIS_Shape(BRepPrimAPI_MakeCone(anAxis, 25, 0, 50).Shape());
-    //myContext->Display(aCone, AIS_Shaded, 0, false);
+    UpdateShape();
 
     TCollection_AsciiString aGlInfo;
     {
@@ -239,19 +245,10 @@ void GlfwOcctView::mainloop()
         //glfwWaitEvents();
         if (!myView.IsNull())
         {
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-            ImGui::NewFrame();
-
-            ImGui::Begin("Test okno");
-            ImGui::Button("baton");
-            ImGui::End();
-
             FlushViewEvents(myContext, myView, true);
             myView->Redraw();
+            drawGui();
 
-            ImGui::Render();
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             glfwSwapBuffers(myOcctWindow->getGlfwWindow());
         }
     }
@@ -271,6 +268,11 @@ void GlfwOcctView::cleanup()
     {
         myOcctWindow->Close();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     glfwTerminate();
 }
 
@@ -285,6 +287,19 @@ void GlfwOcctView::initGui()
     ImGui_ImplOpenGL3_Init("#version 330");
 
     ImGui::StyleColorsDark();
+}
+
+void GlfwOcctView::drawGui()
+{
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    if (this->gui->DrawWindow())
+        UpdateShape();
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 // ================================================================
