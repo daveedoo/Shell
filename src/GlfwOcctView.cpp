@@ -329,6 +329,9 @@ void GlfwOcctView::onResize(int theWidth, int theHeight)
 // ================================================================
 void GlfwOcctView::onMouseScroll(double theOffsetX, double theOffsetY)
 {
+    if (ImGui::GetIO ().WantCaptureMouse)
+        return;
+
     if (!myView.IsNull())
     {
         UpdateZoom(Aspect_ScrollDelta(myOcctWindow->CursorPosition(), int(theOffsetY * 8.0)));
