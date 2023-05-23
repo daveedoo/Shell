@@ -139,6 +139,7 @@
     <ClCompile Include="src\GlfwOcctView.cpp" />
     <ClCompile Include="src\GlfwOcctWindow.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\TopologyProvider.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ShapeProviders\ShapeProvider.h" />
@@ -147,6 +148,7 @@
     <ClInclude Include="src\GlfwOcctView.h" />
     <ClInclude Include="src\GlfwOcctWindow.h" />
     <ClInclude Include="src\ShapeProviders\ShellProvider.h" />
+    <ClInclude Include="src\TopologyProvider.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

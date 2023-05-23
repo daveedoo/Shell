@@ -16,12 +16,14 @@ private:
 	GeomAbs_JoinType joinType = GeomAbs_Arc;
 	Standard_Boolean removeIntEdges = Standard_False;
 	ShapeBuilder::ShellFaceSelectionMethod faceSelectMethod = ShapeBuilder::ShellFaceSelectionMethod::MAX_COORD_Z;
+	bool performShell = true;
 
 	void UpdateShell();
 
 public:
 	ShellProvider(const TopoDS_Shape& originalShape);
 
+	bool GetPerformShell () { return this->performShell; }
 	ShapeBuilder::ShellFaceSelectionMethod GetSelectionMethod () { return this->faceSelectMethod; }
 	Standard_Real GetThickness() const { return this->thickness; }
 	Standard_Real GetTolerance() const { return this->tolerance; }
@@ -29,6 +31,7 @@ public:
 	GeomAbs_JoinType GetJoinType() const { return this->joinType; }
 	Standard_Boolean GetRemoveInternalEdges() const { return this->removeIntEdges; }
 
+	void SetPerformShell (bool perform);
 	void SetSelectionMethod (ShapeBuilder::ShellFaceSelectionMethod method);
 	void SetThickness(Standard_Real thickness);
 	void SetTolerance(Standard_Real tolerance);

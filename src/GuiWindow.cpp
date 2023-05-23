@@ -32,6 +32,12 @@ void GuiWindow::m_DrawShellOptions () {
 
     static float thickness = this->shellProvider->GetThickness ();
     static float tolerance = this->shellProvider->GetTolerance ();
+    static bool performShell = this->shellProvider->GetPerformShell ();
+
+    if (ImGui::Checkbox ("Enable Shell", &performShell)) {
+        changed = true;
+        this->shellProvider->SetPerformShell (performShell);
+    }
 
     if (ImGui::DragFloat ("Thickness", &thickness, 0.01f, -1.f)) {
         changed = true;
@@ -103,10 +109,21 @@ void GuiWindow::m_DrawShellOptions () {
     }
 
     if (changed) {
+        topologyProvider->AnalyzeShape (shellProvider->GetShape ());
         this->shapeChanged = true;
     }
 }
 
 void GuiWindow::m_DrawTopologyOptions () {
-    
+    if (ImGui::BeginListBox ("Faces", ImVec2 (300.0f, 400.0f))) {
+        for (const auto & faceData : topologyProvider->GetFaceData ()) {
+            std::stringstream ss;
+            ss << "face type: " << faceData.typeName << ",\n mass center: (" 
+                << faceData.massCenter.X () << "," << faceData.massCenter.Y () << "," << faceData.massCenter.Z () << ")";
+
+            ImGui::Text (ss.str ().c_str ());
+        }
+
+        ImGui::EndListBox ();
+    }
 }

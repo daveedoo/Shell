@@ -78,7 +78,7 @@ TopoDS_Shape ShapeBuilder::FindFaceByMethod (TopExp_Explorer & faceExplorer, She
             }
 
 #ifdef DO_LOGS
-            std::cout << "plane found at z = " << z << std::endl;
+            std::cout << "plane found at coord = " << newFit << std::endl;
 #endif // DO_LOGS
 
             if (newFit > bestFit) {
