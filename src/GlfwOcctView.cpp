@@ -83,8 +83,8 @@ void GlfwOcctView::UpdateShape()
     if (!ais_shape.IsNull())
         myContext->Remove(ais_shape, false);
 
-    auto& originalShape = shapeProvider->GetShape();
-    ais_shape = new AIS_Shape(originalShape);
+    auto& shellShape = shapeProvider->GetShape();
+    ais_shape = new AIS_Shape(shellShape);
     if (!myContext.IsNull())
         myContext->Display(ais_shape, AIS_Shaded, 0, false);
 }
@@ -189,6 +189,8 @@ void GlfwOcctView::initViewer()
 
     Handle(OpenGl_GraphicDriver) aGraphicDriver = new OpenGl_GraphicDriver(myOcctWindow->GetDisplay(), false);
     aGraphicDriver->SetBuffersNoSwap(true);
+    aGraphicDriver->SetVerticalSync(true);
+
     Handle(V3d_Viewer) aViewer = new V3d_Viewer(aGraphicDriver);
     aViewer->SetDefaultLights();
     aViewer->SetLightOn();
@@ -295,7 +297,9 @@ void GlfwOcctView::drawGui()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    if (this->gui->DrawWindow())
+    this->gui->DrawWindow ();
+
+    if (this->gui->PopShapeChange())
         UpdateShape();
 
     ImGui::Render();
@@ -325,6 +329,9 @@ void GlfwOcctView::onResize(int theWidth, int theHeight)
 // ================================================================
 void GlfwOcctView::onMouseScroll(double theOffsetX, double theOffsetY)
 {
+    if (ImGui::GetIO ().WantCaptureMouse)
+        return;
+
     if (!myView.IsNull())
     {
         UpdateZoom(Aspect_ScrollDelta(myOcctWindow->CursorPosition(), int(theOffsetY * 8.0)));

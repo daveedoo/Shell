@@ -26,8 +26,70 @@
 #include <opencascade/ChFi3d_FilletShape.hxx>
 #include <opencascade/TopoDS.hxx>
 #include <opencascade/TopExp_Explorer.hxx>
+#include <opencascade/StdFail_NotDone.hxx>
+#include <opencascade/BRepGProp.hxx>
+#include <opencascade/GProp_GProps.hxx>
 
 //#define DO_LOGS
+
+TopoDS_Shape ShapeBuilder::FindFaceByMethod (TopExp_Explorer & faceExplorer, ShellFaceSelectionMethod faceSelectMethod) {
+    Standard_Real bestFit = -100000;
+    TopoDS_Shape faceToRemove;  // TODO: check
+    for (; faceExplorer.More (); faceExplorer.Next ()) {
+        TopoDS_Face face = TopoDS::Face (faceExplorer.Current ());
+
+        // get face surface and check if it is a plane
+        Handle (Geom_Surface) surface = BRep_Tool::Surface (face);
+
+        // this is a crude check if this is a plane
+        // probably can be done better?
+        if (surface->DynamicType () == STANDARD_TYPE (Geom_Plane)) {
+            Handle (Geom_Plane) plane = Handle (Geom_Plane)::DownCast (surface);
+            GProp_GProps massProps;
+            BRepGProp::SurfaceProperties(face, massProps);
+
+            gp_Pnt location = massProps.CentreOfMass ();
+            Standard_Real newFit = 0;
+
+            switch (faceSelectMethod) {
+                case ShellFaceSelectionMethod::MAX_COORD_X:
+                   newFit = location.X ();
+                   break;
+
+                case ShellFaceSelectionMethod::MIN_COORD_X:
+                    newFit = -location.X ();
+                    break;
+
+                case ShellFaceSelectionMethod::MAX_COORD_Y:
+                    newFit = location.Y ();
+                    break;
+
+                case ShellFaceSelectionMethod::MIN_COORD_Y:
+                    newFit = -location.Y ();
+                    break;
+
+                case ShellFaceSelectionMethod::MAX_COORD_Z:
+                    newFit = location.Z ();
+                    break;
+
+                case ShellFaceSelectionMethod::MIN_COORD_Z:
+                    newFit = -location.Z ();
+                    break;
+            }
+
+#ifdef DO_LOGS
+            std::cout << "plane found at coord = " << newFit << std::endl;
+#endif // DO_LOGS
+
+            if (newFit > bestFit) {
+                bestFit = newFit;
+                faceToRemove = faceExplorer.Current ();
+            }
+        }
+    }
+
+    return faceToRemove;
+}
 
 TopoDS_Shape ShapeBuilder::Bottle(const Standard_Real myWidth, const Standard_Real myHeight, const Standard_Real myThickness)
 {
@@ -228,36 +290,17 @@ TopoDS_Shape ShapeBuilder::TheShape(bool doFillet, bool showRawShape)
     return rawShape;
 }
 
-TopoDS_Shape ShapeBuilder::Shell(const TopoDS_Shape& originalShape, Standard_Real thickness, Standard_Real tolerance,
-    BRepOffset_Mode offsetMode, GeomAbs_JoinType joinType, Standard_Boolean removeIntEdges)
+TopoDS_Shape ShapeBuilder::Shell(
+    const TopoDS_Shape& originalShape, 
+    ShellFaceSelectionMethod faceSelectMethod, 
+    Standard_Real thickness, 
+    Standard_Real tolerance,
+    BRepOffset_Mode offsetMode, 
+    GeomAbs_JoinType joinType, 
+    Standard_Boolean removeIntEdges)
 {
     TopExp_Explorer faceExplorer(originalShape, TopAbs_ShapeEnum::TopAbs_FACE, TopAbs_ShapeEnum::TopAbs_SHAPE);
-
-    Standard_Real maxZ = -100000;
-    TopoDS_Shape faceToRemove;  // TODO: check
-    for (; faceExplorer.More(); faceExplorer.Next()) {
-        TopoDS_Face face = TopoDS::Face(faceExplorer.Current());
-
-        // get face surface and check if it is a plane
-        Handle(Geom_Surface) surface = BRep_Tool::Surface(face);
-
-        // this is a crude check if this is a plane
-        // probably can be done better?
-        if (surface->DynamicType() == STANDARD_TYPE(Geom_Plane)) {
-            Handle(Geom_Plane) plane = Handle(Geom_Plane)::DownCast(surface);
-            gp_Pnt location = plane->Location();
-            Standard_Real z = location.Z();
-
-#ifdef DO_LOGS
-            std::cout << "plane found at z = " << z << std::endl;
-#endif // DO_LOGS
-
-            if (z > maxZ) {
-                maxZ = z;
-                faceToRemove = faceExplorer.Current();
-            }
-        }
-    }
+    auto faceToRemove = FindFaceByMethod (faceExplorer, faceSelectMethod);
 
     // remove face and make hollow solid
     TopTools_ListOfShape facesToRemove;
@@ -290,10 +333,14 @@ TopoDS_Shape ShapeBuilder::Shell(const TopoDS_Shape& originalShape, Standard_Rea
     try
     {
         result = hollowSolid.Shape();
-    }
-    catch (std::exception e)
+    } 
+    catch (const std::exception & e)
     {
         std::cout << e.what() << std::endl;
+    }
+    catch (const StdFail_NotDone & notDone) 
+    {
+        std::cout << notDone.GetMessageString () << std::endl;
     }
 
     return result;
