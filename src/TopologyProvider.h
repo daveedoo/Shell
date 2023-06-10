@@ -17,6 +17,26 @@ class TopologyProvider {
 		struct FaceInfo {
 			gp_Pnt massCenter;
 			std::string typeName;
+			int topologyId;
+			int parent;
+		};
+
+		struct EdgeInfo {
+			gp_Pnt massCenter;
+			int topologyId;
+			std::vector<int> adjacent;
+		};
+
+		struct ShellInfo {
+			gp_Pnt massCenter;
+			int topologyId;
+			int parent;
+		};
+
+		struct SolidInfo {
+			gp_Pnt massCenter;
+			int topologyId;
+			int parent;
 		};
 
 		TopologyProvider();
@@ -26,4 +46,7 @@ class TopologyProvider {
 
 	private:
 		std::vector<FaceInfo> faces;
+		std::vector<EdgeInfo> edges;
+		std::vector<ShellInfo> shells;
+		std::vector<SolidInfo> solids;
 };
