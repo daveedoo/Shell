@@ -19,6 +19,7 @@ int main()
     TopoDS_Shape originalShape; BRepTools::Read(originalShape, "res/file.brep", BRep_Builder());
 
     auto shellProvider = std::make_shared<ShellProvider>(originalShape);
+
     auto gui = std::make_unique<GuiWindow>(shellProvider);
     GlfwOcctView anApp(std::move(shellProvider), std::move(gui));
 
