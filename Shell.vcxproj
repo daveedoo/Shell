@@ -152,6 +152,7 @@
     <None Include="res\knob.stp" />
     <None Include="res\LawnMower.stp" />
     <None Include="res\MiniPitcher.stp" />
+    <None Include="res\TheShape.brep" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

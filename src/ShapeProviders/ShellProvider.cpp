@@ -3,10 +3,11 @@
 
 void ShellProvider::UpdateShell()
 {
-	this->shell = ShapeBuilder::Shell(originalShape, this->thickness, this->tolerance,
-		this->offsetMode,
-		this->joinType,
-		this->removeIntEdges);
+	this->shell = originalShape;
+	//this->shell = ShapeBuilder::Shell(originalShape, this->thickness, this->tolerance,
+	//	this->offsetMode,
+	//	this->joinType,
+	//	this->removeIntEdges);
 }
 
 ShellProvider::ShellProvider(const TopoDS_Shape& originalShape)
