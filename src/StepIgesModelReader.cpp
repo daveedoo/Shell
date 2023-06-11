@@ -15,6 +15,8 @@ TopoDS_Shape StepIgesModelReader::ReadFile(Standard_CString file, FileExtension 
     Standard_Integer nbTransfers = reader.TransferRoots();
     std::cout << "=== Transfer Check ===" << std::endl;
     reader.PrintCheckTransfer(Standard_False, IFSelect_ItemsByEntity);
+
+    return reader.OneShape();
 }
 
 XSControl_Reader StepIgesModelReader::GetFileReader(FileExtension ext)
