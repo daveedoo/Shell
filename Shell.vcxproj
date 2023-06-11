@@ -146,6 +146,13 @@
     <ClInclude Include="src\ShapeProviders\ShellProvider.h" />
     <ClInclude Include="src\StepIgesModelReader.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="res\Assem1.IGS" />
+    <None Include="res\Assemblage2.IGS" />
+    <None Include="res\knob.stp" />
+    <None Include="res\LawnMower.stp" />
+    <None Include="res\MiniPitcher.stp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
