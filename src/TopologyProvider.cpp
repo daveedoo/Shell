@@ -13,10 +13,17 @@
 #include <opencascade/TopTools_ListOfShape.hxx>
 #include <cassert>
 
+#include <set>
+#include <map>
 #include "TopologyProvider.h"
 
 TopologyProvider::TopologyProvider () {
 	faces.clear ();
+}
+
+std::ostream & operator<< (std::ostream & stream, const gp_Pnt & pnt) {
+	stream << pnt.X() << ", " << pnt.Y() << ", " << pnt.Z();
+	return stream;
 }
 
 void TopologyProvider::AnalyzeShape (const TopoDS_Shape & shape) {
@@ -55,12 +62,27 @@ void TopologyProvider::AnalyzeShape (const TopoDS_Shape & shape) {
 		return massCenter;
 	};
 
+	std::map<int, gp_Pnt> centers;
+
+	struct PrintableObject {
+		int id;
+		std::string type;
+		gp_Pnt center;
+	};
+
+	const auto printObjects = [](const PrintableObject & a, const PrintableObject & b) -> void {
+		std::cout << "\"" << a.type << " " << a.id << "\" \"" << b.type << " " << b.id << "\"" << std::endl;
+		return;
+	};
+
 	for (; solidExplorer.More (); solidExplorer.Next ()) {
 		TopoDS_Solid solid = TopoDS::Solid (solidExplorer.Current ());
 		auto massCenter = getMassCenter (solid);
 		int id = shapeId++;
 
-		std::cout << "solid " << id << std::endl;
+		//std::cout << "solid " << id << " " << massCenter << std::endl;
+
+		centers.insert ({id, massCenter});
 		mapShapeInteger.Bind (solid, id);
 	}
 
@@ -69,11 +91,12 @@ void TopologyProvider::AnalyzeShape (const TopoDS_Shape & shape) {
 		auto massCenter = getMassCenter (shell);
 		int id = shapeId++;
 
+		centers.insert ({ id, massCenter });
 		mapShapeInteger.Bind (shell, id);
 		shells.push_back (ShellInfo{ massCenter, id });
 
 		if (!shellSolidMap.Contains (shell)) {
-			std::cout << "shell " << id << std::endl;
+			std::cout << "shell " << id << " " << massCenter << std::endl;
 			continue;
 		}
 
@@ -83,7 +106,8 @@ void TopologyProvider::AnalyzeShape (const TopoDS_Shape & shape) {
 			auto & solid = TopoDS::Solid (s);
 			auto solidId = mapShapeInteger.Find (solid);
 
-			std::cout << "solid " << solidId << " -> shell " << id << std::endl;
+			printObjects (PrintableObject{solidId, "solid", centers[solidId]}, PrintableObject{id, "shell", massCenter});
+			//std::cout << "solid " << solidId << " -> shell " << id << " " << massCenter << std::endl;
 		}
 	}
 
@@ -97,12 +121,13 @@ void TopologyProvider::AnalyzeShape (const TopoDS_Shape & shape) {
 
 		auto massCenter = getMassCenter (face);
 
+		centers.insert ({ id, massCenter });
 		mapShapeInteger.Bind (face, id);
 		faces.push_back ({ massCenter, surfaceTypeName });
 
 		// shell
 		if (!faceShellMap.Contains (face)) {
-			std::cout << "face " << id << std::endl;
+			std::cout << "face " << id << " " << massCenter << std::endl;
 			continue;
 		}
 
@@ -112,7 +137,8 @@ void TopologyProvider::AnalyzeShape (const TopoDS_Shape & shape) {
 			auto & shell = TopoDS::Shell (s);
 			auto shellId = mapShapeInteger.Find (shell);
 
-			std::cout << "shell " << shellId << " -> face " << id << std::endl;
+			printObjects (PrintableObject{ shellId, "shell", centers[shellId] }, PrintableObject{ id, "face", massCenter });
+			//std::cout << "shell " << shellId << " -> face " << id << " " << massCenter << std::endl;
 		}
 	}
 
@@ -121,11 +147,12 @@ void TopologyProvider::AnalyzeShape (const TopoDS_Shape & shape) {
 		int id = shapeId++;
 		auto massCenter = getMassCenter (edge);
 
+		centers.insert ({ id, massCenter });
 		mapShapeInteger.Bind (edge, id);
 
 		// edge
 		if (!edgeFaceMap.Contains (edge)) {
-			std::cout << "edge " << id << std::endl;
+			std::cout << "edge " << id << " " << massCenter << std::endl;
 			continue;
 		}
 
@@ -135,7 +162,8 @@ void TopologyProvider::AnalyzeShape (const TopoDS_Shape & shape) {
 			auto & face = TopoDS::Face (s);
 			auto faceId = mapShapeInteger.Find (face);
 
-			std::cout << "face " << faceId << " -> edge " << id << std::endl;
+			printObjects (PrintableObject{ faceId, "face", centers[faceId] }, PrintableObject{ id, "edge", massCenter });
+			//std::cout << "face " << faceId << " -> edge " << id << " " << massCenter << std::endl;
 		}
 	}
 }
