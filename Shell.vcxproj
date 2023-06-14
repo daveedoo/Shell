@@ -139,6 +139,7 @@
     <ClCompile Include="src\GlfwOcctView.cpp" />
     <ClCompile Include="src\GlfwOcctWindow.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\StepIgesModelReader.cpp" />
     <ClCompile Include="src\TopologyProvider.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -148,7 +149,16 @@
     <ClInclude Include="src\GlfwOcctView.h" />
     <ClInclude Include="src\GlfwOcctWindow.h" />
     <ClInclude Include="src\ShapeProviders\ShellProvider.h" />
+    <ClInclude Include="src\StepIgesModelReader.h" />
     <ClInclude Include="src\TopologyProvider.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\Assem1.IGS" />
+    <None Include="res\Assemblage2.IGS" />
+    <None Include="res\knob.stp" />
+    <None Include="res\LawnMower.stp" />
+    <None Include="res\MiniPitcher.stp" />
+    <None Include="res\TheShape.brep" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

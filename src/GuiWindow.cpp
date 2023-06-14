@@ -39,7 +39,8 @@ void GuiWindow::m_DrawShellOptions () {
         this->shellProvider->SetPerformShell (performShell);
     }
 
-    if (ImGui::DragFloat ("Thickness", &thickness, 0.01f, -1.f)) {
+    if (ImGui::DragFloat("Thickness", &thickness, 0.01f))
+    {
         changed = true;
         this->shellProvider->SetThickness (thickness);
     }
