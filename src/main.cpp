@@ -9,7 +9,7 @@ int main()
 {
     //auto extension = StepIgesModelReader::FileExtension::IGES; Standard_CString file = "res/Assem1.IGS";
     //auto extension = StepIgesModelReader::FileExtension::IGES; Standard_CString file = "res/Assemblage2.IGS";
-    auto extension = StepIgesModelReader::FileExtension::STEP; Standard_CString file = "res/knob.stp";
+    //auto extension = StepIgesModelReader::FileExtension::STEP; Standard_CString file = "res/knob.stp";
     //auto extension = StepIgesModelReader::FileExtension::STEP; Standard_CString file = "res/LawnMower.stp";
     //auto extension = StepIgesModelReader::FileExtension::STEP; Standard_CString file = "res/MiniPitcher.stp";
 

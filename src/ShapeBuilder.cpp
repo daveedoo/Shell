@@ -295,7 +295,8 @@ TopoDS_Shape ShapeBuilder::Shell(
     ShellFaceSelectionMethod faceSelectMethod, 
     Standard_Real thickness, 
     Standard_Real tolerance,
-    BRepOffset_Mode offsetMode, 
+    BRepOffset_Mode offsetMode,
+    Standard_Boolean intersection,
     GeomAbs_JoinType joinType, 
     Standard_Boolean removeIntEdges)
 {
@@ -315,7 +316,7 @@ TopoDS_Shape ShapeBuilder::Shell(
     try
     {
         hollowSolid.MakeThickSolidByJoin(originalShape, facesToRemove, thickness, tolerance,
-            offsetMode, false, false,
+            offsetMode, intersection, false,
             joinType, removeIntEdges,
             Message_ProgressRange());
     }

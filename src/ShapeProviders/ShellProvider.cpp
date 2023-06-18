@@ -9,6 +9,7 @@ void ShellProvider::UpdateShell()
 			this->thickness,
 			this->tolerance,
 			this->offsetMode,
+			this->intersection,
 			this->joinType,
 			this->removeIntEdges);
 	} else {
@@ -47,6 +48,12 @@ void ShellProvider::SetTolerance(Standard_Real tolerance)
 void ShellProvider::SetOffsetMode(BRepOffset_Mode offsetMode)
 {
 	this->offsetMode = offsetMode;
+	UpdateShell();
+}
+
+void ShellProvider::SetIntersection(Standard_Boolean intersection)
+{
+	this->intersection = intersection;
 	UpdateShell();
 }
 

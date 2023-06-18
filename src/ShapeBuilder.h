@@ -27,6 +27,7 @@ public:
 		Standard_Real thickness = -0.5,
 		Standard_Real tolerance = 1.e-3,
 		BRepOffset_Mode offsetMode = BRepOffset_Mode::BRepOffset_Skin,
+		Standard_Boolean intersection = false,
 		GeomAbs_JoinType joinType = GeomAbs_Arc,
 		Standard_Boolean removeIntEdges = Standard_False);
 };

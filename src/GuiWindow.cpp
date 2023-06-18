@@ -32,6 +32,7 @@ void GuiWindow::m_DrawShellOptions () {
 
     static float thickness = this->shellProvider->GetThickness ();
     static float tolerance = this->shellProvider->GetTolerance ();
+    static bool intersection = this->shellProvider->GetIntersection();
     static bool performShell = this->shellProvider->GetPerformShell ();
 
     if (ImGui::Checkbox ("Enable Shell", &performShell)) {
@@ -66,7 +67,7 @@ void GuiWindow::m_DrawShellOptions () {
 
     static const std::string modes[] = { "Skin", "Pipe", "RectoVerse" };
     static BRepOffset_Mode selectedOffsetModeIdx = this->shellProvider->GetOffsetMode ();
-    if (ImGui::BeginCombo ("Offset mode", modes[selectedOffsetModeIdx].c_str ())) {
+    if (ImGui::BeginCombo ("Offset mode (unused)", modes[selectedOffsetModeIdx].c_str ())) {
         for (size_t i = 0; i < 3; i++) {
             if (ImGui::Selectable (modes[i].c_str (), i == selectedOffsetModeIdx)) {
                 changed = true;
@@ -75,6 +76,11 @@ void GuiWindow::m_DrawShellOptions () {
             }
         }
         ImGui::EndCombo ();
+    }
+
+    if (ImGui::Checkbox("Intersection", &intersection)) {
+        changed = true;
+        this->shellProvider->SetIntersection(intersection);
     }
 
     static const GeomAbs_JoinType joinTypes[] = { GeomAbs_Arc, GeomAbs_Intersection };
