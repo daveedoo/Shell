@@ -29,6 +29,7 @@
 #include <opencascade/StdFail_NotDone.hxx>
 #include <opencascade/BRepGProp.hxx>
 #include <opencascade/GProp_GProps.hxx>
+#include <opencascade/BRepPrimAPI_MakeBox.hxx>
 
 //#define DO_LOGS
 
@@ -288,6 +289,12 @@ TopoDS_Shape ShapeBuilder::TheShape(bool doFillet, bool showRawShape)
         return fillet.Shape();
     }
     return rawShape;
+}
+
+TopoDS_Shape ShapeBuilder::Cube () {
+    BRepPrimAPI_MakeBox box (gp_Pnt (0,0,0), 10.0f, 10.0f, 10.0f);
+    box.Build ();
+    return box.Shape ();
 }
 
 TopoDS_Shape ShapeBuilder::Shell(
